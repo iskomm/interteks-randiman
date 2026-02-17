@@ -371,10 +371,11 @@ button {
 }
 
 .card {
-  background: #151821;
-  border: 1px solid #232838;
-  border-radius: 12px;
-  padding: 12px;
+  background: #141924;
+  border: 1px solid #222a3d;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .card-header {
@@ -431,31 +432,26 @@ button {
   display: flex;
   justify-content: space-between;
   font-size: 13px;
-  padding: 7px 8px;
-  border: 1px solid #202638;
-  border-radius: 8px;
-  background: #121827;
-  margin-bottom: 6px;
-}
-
-.row:last-child {
+  padding: 8px 2px;
+  border-bottom: 1px solid #212a3b;
+  background: transparent;
   margin-bottom: 0;
 }
 
-#cards .card {
-  background: linear-gradient(180deg, #151821 0%, #111521 100%);
+.row:last-child {
+  border-bottom: none;
 }
 
-#cards .card .row:nth-child(odd) {
-  background: #111726;
+#cards .card {
+  background: linear-gradient(180deg, #151a24 0%, #121722 100%);
 }
 
 .card-details {
   margin-top: 8px;
-  border: 1px dashed #2b3143;
+  border: 1px solid #2a3246;
   border-radius: 8px;
-  padding: 8px;
-  background: #101522;
+  padding: 8px 10px;
+  background: #111826;
 }
 
 .card-details summary {
@@ -482,11 +478,11 @@ button {
 }
 
 .cut-meter-box {
-  margin: 8px 0;
-  padding: 8px;
-  border: 1px solid #232838;
-  border-radius: 8px;
-  background: #111522;
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #2a3246;
+  border-radius: 10px;
+  background: #101827;
 }
 
 .cut-meter-title {

@@ -13,8 +13,6 @@ const monthlyPath = path.join(__dirname, "data", "monthly.json");
 const metaPath = path.join(__dirname, "data", "meta.json");
 const shiftsPath = path.join(__dirname, "data", "shifts.json");
 const statusPath = path.join(__dirname, "data", "status.json");
-const STATUS_PERSIST_MS = 30000;
-let lastStatusPersistMs = 0;
 let useDb = Boolean(process.env.DATABASE_URL);
 let pool = null;
 
@@ -134,7 +132,9 @@ function readStatusStore() {
 
 function writeStatusStore(data) {
   ensureStatusStore();
-  fs.writeFileSync(statusPath, JSON.stringify(data, null, 2), "utf8");
+  const tmpPath = `${statusPath}.tmp`;
+  fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), "utf8");
+  fs.renameSync(tmpPath, statusPath);
 }
 
 async function loadStatusStore() {
@@ -165,9 +165,6 @@ async function loadStatusStore() {
 
 function persistStatusStore() {
   if (useDb) return;
-  const now = Date.now();
-  if (now - lastStatusPersistMs < STATUS_PERSIST_MS) return;
-  lastStatusPersistMs = now;
   const data = {};
   store.forEach((value, key) => {
     data[key] = value;
@@ -554,6 +551,8 @@ app.post("/ingest", async (req, res) => {
   }
 
   store.set(tezgahId, current);
+  // Local file mode: persist each ingest so restart continues near-exactly.
+  persistStatusStore();
   if (deltaStates) {
     await addMonthlyTotals(tezgahId, current.timestamp, deltaStates);
     await addShiftTotals(current.timestamp, deltaStates);

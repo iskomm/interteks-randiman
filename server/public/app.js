@@ -215,7 +215,9 @@ function renderCard(item) {
     .join("");
   const detailRows = `${metaRow}${rows}`.trim();
   const detailBlock = detailRows
-    ? `<details class="card-details">
+    ? `<details class="card-details" data-tezgah-id="${tezgahId}" ${
+        openCardDetails.has(tezgahId) ? "open" : ""
+      }>
         <summary>Detaylar</summary>
         <div class="card-details-content">${detailRows}</div>
       </details>`
@@ -473,6 +475,7 @@ let activeShiftKey = "07-15";
 let cachedShifts = [];
 let userSelectedShift = false;
 let lastDetectedShiftKey = shiftKeyForNow();
+const openCardDetails = new Set();
 
 function renderShiftTabs(shifts) {
   cachedShifts = shifts;
@@ -621,6 +624,18 @@ cardsEl.addEventListener("click", (event) => {
   const setBtn = event.target.closest(".cut-meter-set");
   if (setBtn) {
     submitCutMetre(setBtn.dataset.tezgahId, "set");
+  }
+});
+
+cardsEl.addEventListener("toggle", (event) => {
+  const details = event.target;
+  if (!details.classList || !details.classList.contains("card-details")) return;
+  const tezgahId = details.dataset.tezgahId;
+  if (!tezgahId) return;
+  if (details.open) {
+    openCardDetails.add(tezgahId);
+  } else {
+    openCardDetails.delete(tezgahId);
   }
 });
 
