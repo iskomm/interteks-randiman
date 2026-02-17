@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Interteks Randiman</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+        <div class="brand">
+          <div class="logo">IR</div>
+          <div>
+            <div class="title">Interteks Randiman</div>
+            <div class="subtitle">Tezgah Durum ve Randiman</div>
+          </div>
+        </div>
+        <div class="meta">
+          <div id="last-updated">Son guncelleme: -</div>
+          <button id="refresh-btn">Yenile</button>
+          <div class="sound-visual" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+    </header>
+
+    <main class="container">
+      <section class="summary">
+        <div class="summary-card">
+          <div class="label">Toplam Tezgah</div>
+          <div class="value" id="total-count">0</div>
+        </div>
+        <div class="summary-card">
+          <div class="label">Aktif (Mavi)</div>
+          <div class="value" id="active-count">0</div>
+        </div>
+        <div class="summary-card">
+          <div class="label">Ortalama Randiman</div>
+          <div class="value" id="avg-efficiency">0%</div>
+        </div>
+      </section>
+
+      <section class="distribution">
+        <div class="section-title">Randiman Dagilimi</div>
+        <div class="dist-list">
+          <div class="dist-row">
+            <span>0-40%</span>
+            <div class="dist-bar"><div class="dist-fill low" id="dist-low"></div></div>
+            <span id="dist-low-count">0</span>
+          </div>
+          <div class="dist-row">
+            <span>40-60%</span>
+            <div class="dist-bar"><div class="dist-fill mid" id="dist-mid"></div></div>
+            <span id="dist-mid-count">0</span>
+          </div>
+          <div class="dist-row">
+            <span>60-80%</span>
+            <div class="dist-bar"><div class="dist-fill high" id="dist-high"></div></div>
+            <span id="dist-high-count">0</span>
+          </div>
+          <div class="dist-row">
+            <span>80-100%</span>
+            <div class="dist-bar"><div class="dist-fill top" id="dist-top"></div></div>
+            <span id="dist-top-count">0</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="chart-section">
+        <div class="section-title">Tezgah Randiman Grafigi (T-001..T-100)</div>
+        <div class="chart-wrap">
+          <div id="tezgah-chart" class="tezgah-chart"></div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="section-title">Tezgah Bilgisi Girisi</div>
+        <form id="meta-form" class="meta-form">
+          <input id="tezgah-id" placeholder="Tezgah ID (or. T-001)" required />
+          <input id="desen" placeholder="Desen" />
+          <input id="atki" placeholder="Atki sikligi" />
+          <input id="devir" placeholder="Devir (rpm)" />
+          <input id="siparis-metre" placeholder="Siparis Metre (m)" />
+          <input id="teslim-metre" placeholder="Teslim Metre (m)" />
+          <button type="submit">Kaydet</button>
+        </form>
+        <div id="meta-status" class="form-status"></div>
+      </section>
+
+      <section>
+        <div class="section-title">Durus Nedenleri (Bu Ay)</div>
+        <div id="reasons" class="reasons">
+          <div class="reason" data-key="sari">
+          <div class="reason-label">Sarı - Atkı Duruşu</div>
+            <div class="bar"><div class="fill sari"></div></div>
+            <div class="reason-value" id="reason-sari">00:00:00</div>
+            <div class="reason-count" id="reason-sari-count">0 duruş</div>
+          </div>
+          <div class="reason" data-key="kirmizi">
+          <div class="reason-label">Kırmızı - Çözgü Duruşu</div>
+            <div class="bar"><div class="fill kirmizi"></div></div>
+            <div class="reason-value" id="reason-kirmizi">00:00:00</div>
+            <div class="reason-count" id="reason-kirmizi-count">0 duruş</div>
+          </div>
+          <div class="reason" data-key="yesil">
+          <div class="reason-label">Yeşil - Elle Durdurma</div>
+            <div class="bar"><div class="fill yesil"></div></div>
+            <div class="reason-value" id="reason-yesil">00:00:00</div>
+            <div class="reason-count" id="reason-yesil-count">0 duruş</div>
+          </div>
+          <div class="reason" data-key="beyaz">
+          <div class="reason-label">Beyaz - Genel Arıza / Usta</div>
+            <div class="bar"><div class="fill beyaz"></div></div>
+            <div class="reason-value" id="reason-beyaz">00:00:00</div>
+            <div class="reason-count" id="reason-beyaz-count">0 duruş</div>
+          </div>
+        </div>
+        <div class="reason-total">
+          Iplik Sonu Durus: <span id="reason-iplik-count">0</span>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-title">Vardiyalar (Bu Ay)</div>
+        <div class="tabs">
+          <button class="tab-btn is-active" data-shift="07-15">Vardiya 1</button>
+          <button class="tab-btn" data-shift="15-23">Vardiya 2</button>
+          <button class="tab-btn" data-shift="23-07">Vardiya 3</button>
+          <div class="tab-actions">
+            <button id="download-shift-1">Vardiya 1 PDF</button>
+            <button id="download-shift-2">Vardiya 2 PDF</button>
+            <button id="download-shift-3">Vardiya 3 PDF</button>
+          </div>
+        </div>
+        <div id="shifts" class="cards"></div>
+      </section>
+
+      <section>
+        <div class="section-title">Aylik Rapor (Bu Ay)</div>
+        <div class="report-actions">
+          <button id="download-pdf">PDF Indir</button>
+        </div>
+        <div id="monthly" class="cards"></div>
+      </section>
+
+      <section>
+        <div class="section-title">Tezgahlar (Canli)</div>
+        <div id="cards" class="cards"></div>
+        <div id="empty" class="empty hidden">Henuz veri yok.</div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

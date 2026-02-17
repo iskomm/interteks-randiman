@@ -1,0 +1,65 @@
+<Window x:Class="InterteksConfigurator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Interteks ESP32 Programlayıcı" Height="640" Width="720">
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <TextBlock Text="Koç Elektronik - ESP32 Ayar ve Programlama"
+               FontSize="16" FontWeight="Bold" Margin="0,0,0,12"/>
+
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+      <TextBlock Text="Wi-Fi Adı" Width="120" VerticalAlignment="Center"/>
+      <TextBox x:Name="SsidBox" Width="260"/>
+      <TextBlock Text="Şifre" Width="60" Margin="12,0,0,0" VerticalAlignment="Center"/>
+      <PasswordBox x:Name="PassBox" Width="200"/>
+    </StackPanel>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+      <TextBlock Text="Tezgah ID" Width="120" VerticalAlignment="Center"/>
+      <TextBox x:Name="TezgahBox" Width="160"/>
+      <TextBlock Text="API URL" Width="70" Margin="12,0,0,0" VerticalAlignment="Center"/>
+      <TextBox x:Name="ApiBox" Width="310"/>
+    </StackPanel>
+
+    <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,8">
+      <TextBlock Text="Arduino CLI" Width="120" VerticalAlignment="Center"/>
+      <TextBox x:Name="CliPathBox" Width="440"/>
+      <Button Content="Gözat" Width="70" Margin="8,0,0,0" Click="OnBrowseCli"/>
+    </StackPanel>
+
+    <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,0,0,8">
+      <TextBlock Text="Sketch Klasörü" Width="120" VerticalAlignment="Center"/>
+      <TextBox x:Name="SketchPathBox" Width="440"/>
+      <Button Content="Gözat" Width="70" Margin="8,0,0,0" Click="OnBrowseSketch"/>
+    </StackPanel>
+
+    <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,0,0,8">
+      <TextBlock Text="Board FQBN" Width="120" VerticalAlignment="Center"/>
+      <TextBox x:Name="FqbnBox" Width="260"/>
+      <TextBlock Text="COM" Width="40" Margin="12,0,0,0" VerticalAlignment="Center"/>
+      <ComboBox x:Name="PortCombo" Width="120"/>
+      <Button Content="Yenile" Width="70" Margin="8,0,0,0" Click="OnRefreshPorts"/>
+    </StackPanel>
+
+    <StackPanel Grid.Row="6" Orientation="Horizontal" Margin="0,0,0,8">
+      <Button Content="Programla" Width="120" Click="OnProgram"/>
+      <TextBlock x:Name="StatusText" Margin="12,2,0,0"/>
+    </StackPanel>
+
+    <TextBlock Grid.Row="7" Text="Çıktı / Log" Margin="0,6,0,6" FontWeight="SemiBold"/>
+
+    <TextBox Grid.Row="8" x:Name="LogBox" TextWrapping="Wrap" IsReadOnly="True"
+             VerticalScrollBarVisibility="Auto" AcceptsReturn="True"/>
+  </Grid>
+</Window>

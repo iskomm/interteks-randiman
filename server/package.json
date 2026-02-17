@@ -1,0 +1,14 @@
+{
+  "name": "interteks-randiman-server",
+  "version": "1.0.0",
+  "description": "ESP32 kule lamba verisi alan basit sunucu",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pdfkit": "^0.15.2",
+    "pg": "^8.13.1"
+  }
+}

@@ -1,0 +1,6 @@
+# Build outputs
+windows_app/**/bin/
+windows_app/**/obj/
+
+# Local credentials
+esp32_fw/credentials.h

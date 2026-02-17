@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: interteks-randiman-server
+    env: node
+    plan: free
+    buildCommand: "cd server && npm install"
+    startCommand: "cd server && npm start"
+    autoDeploy: true
