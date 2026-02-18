@@ -12,6 +12,7 @@ const sseClients = new Set();
 const monthlyPath = path.join(__dirname, "data", "monthly.json");
 const metaPath = path.join(__dirname, "data", "meta.json");
 const shiftsPath = path.join(__dirname, "data", "shifts.json");
+const shiftsDailyPath = path.join(__dirname, "data", "shifts_daily.json");
 const statusPath = path.join(__dirname, "data", "status.json");
 let useDb = Boolean(process.env.DATABASE_URL);
 let pool = null;
@@ -108,6 +109,31 @@ function readShiftStore() {
 function writeShiftStore(data) {
   ensureShiftStore();
   fs.writeFileSync(shiftsPath, JSON.stringify(data, null, 2), "utf8");
+}
+
+function ensureDailyShiftStore() {
+  const dir = path.dirname(shiftsDailyPath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  if (!fs.existsSync(shiftsDailyPath)) {
+    fs.writeFileSync(shiftsDailyPath, JSON.stringify({}), "utf8");
+  }
+}
+
+function readDailyShiftStore() {
+  ensureDailyShiftStore();
+  try {
+    const raw = fs.readFileSync(shiftsDailyPath, "utf8");
+    return JSON.parse(raw || "{}");
+  } catch (err) {
+    return {};
+  }
+}
+
+function writeDailyShiftStore(data) {
+  ensureDailyShiftStore();
+  fs.writeFileSync(shiftsDailyPath, JSON.stringify(data, null, 2), "utf8");
 }
 
 function ensureStatusStore() {
@@ -293,6 +319,17 @@ function shiftKeyFromTimestamp(ts) {
   return "23-07";
 }
 
+function shiftDateKeyFromTimestamp(ts) {
+  const input = toNumber(ts) || Math.floor(Date.now() / 1000);
+  const parts = timePartsFromTimestamp(input);
+  const shiftKey = shiftKeyFromTimestamp(input);
+  if (shiftKey === "23-07" && parts.hour < 7) {
+    const prev = timePartsFromTimestamp(input - 86400);
+    return `${prev.year}-${prev.month}-${prev.day}`;
+  }
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
 function formatSeconds(totalSeconds) {
   const sec = Math.max(0, Math.floor(totalSeconds));
   const h = Math.floor(sec / 3600);
@@ -400,7 +437,15 @@ async function addMonthlyTotals(tezgahId, ts, deltaStates) {
 async function addShiftTotals(ts, deltaStates) {
   const monthKey = monthKeyFromTimestamp(ts);
   const shiftKey = shiftKeyFromTimestamp(ts);
+  const shiftDate = shiftDateKeyFromTimestamp(ts);
   if (useDb) {
+    const values = [
+      toNumber(deltaStates.sari),
+      toNumber(deltaStates.kirmizi),
+      toNumber(deltaStates.yesil),
+      toNumber(deltaStates.beyaz),
+      toNumber(deltaStates.mavi)
+    ];
     await pool.query(
       `INSERT INTO shifts (month, shift, sari, kirmizi, yesil, beyaz, mavi)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -411,15 +456,19 @@ async function addShiftTotals(ts, deltaStates) {
          yesil = shifts.yesil + EXCLUDED.yesil,
          beyaz = shifts.beyaz + EXCLUDED.beyaz,
          mavi = shifts.mavi + EXCLUDED.mavi`,
-      [
-        monthKey,
-        shiftKey,
-        toNumber(deltaStates.sari),
-        toNumber(deltaStates.kirmizi),
-        toNumber(deltaStates.yesil),
-        toNumber(deltaStates.beyaz),
-        toNumber(deltaStates.mavi)
-      ]
+      [monthKey, shiftKey, ...values]
+    );
+    await pool.query(
+      `INSERT INTO shifts_daily (date_key, shift, sari, kirmizi, yesil, beyaz, mavi)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (date_key, shift)
+       DO UPDATE SET
+         sari = shifts_daily.sari + EXCLUDED.sari,
+         kirmizi = shifts_daily.kirmizi + EXCLUDED.kirmizi,
+         yesil = shifts_daily.yesil + EXCLUDED.yesil,
+         beyaz = shifts_daily.beyaz + EXCLUDED.beyaz,
+         mavi = shifts_daily.mavi + EXCLUDED.mavi`,
+      [shiftDate, shiftKey, ...values]
     );
     return;
   }
@@ -435,6 +484,19 @@ async function addShiftTotals(ts, deltaStates) {
   entry.beyaz += toNumber(deltaStates.beyaz);
   entry.mavi += toNumber(deltaStates.mavi);
   writeShiftStore(db);
+
+  const dailyDb = readDailyShiftStore();
+  if (!dailyDb[shiftDate]) dailyDb[shiftDate] = {};
+  if (!dailyDb[shiftDate][shiftKey]) {
+    dailyDb[shiftDate][shiftKey] = { sari: 0, kirmizi: 0, yesil: 0, beyaz: 0, mavi: 0 };
+  }
+  const dailyEntry = dailyDb[shiftDate][shiftKey];
+  dailyEntry.sari += toNumber(deltaStates.sari);
+  dailyEntry.kirmizi += toNumber(deltaStates.kirmizi);
+  dailyEntry.yesil += toNumber(deltaStates.yesil);
+  dailyEntry.beyaz += toNumber(deltaStates.beyaz);
+  dailyEntry.mavi += toNumber(deltaStates.mavi);
+  writeDailyShiftStore(dailyDb);
 }
 
 async function initDb() {
@@ -501,6 +563,18 @@ async function initDb() {
          beyaz BIGINT NOT NULL,
          mavi BIGINT NOT NULL,
          PRIMARY KEY (month, shift)
+       )`
+    );
+    await pool.query(
+      `CREATE TABLE IF NOT EXISTS shifts_daily (
+         date_key TEXT NOT NULL,
+         shift TEXT NOT NULL,
+         sari BIGINT NOT NULL,
+         kirmizi BIGINT NOT NULL,
+         yesil BIGINT NOT NULL,
+         beyaz BIGINT NOT NULL,
+         mavi BIGINT NOT NULL,
+         PRIMARY KEY (date_key, shift)
        )`
     );
     await loadStatusStore();
@@ -738,8 +812,36 @@ app.get("/api/monthly", (req, res) => {
 });
 
 app.get("/api/shifts", (req, res) => {
+  const period = req.query.period === "daily" ? "daily" : "monthly";
   const month = req.query.month || monthKeyFromTimestamp();
+  const dateKey = req.query.date || todayDateString();
   if (useDb) {
+    if (period === "daily") {
+      return pool
+        .query(
+          `SELECT shift, sari, kirmizi, yesil, beyaz, mavi
+           FROM shifts_daily WHERE date_key = $1`,
+          [dateKey]
+        )
+        .then((result) => {
+          const map = new Map();
+          result.rows.forEach((row) => {
+            map.set(row.shift, {
+              sari: Number(row.sari),
+              kirmizi: Number(row.kirmizi),
+              yesil: Number(row.yesil),
+              beyaz: Number(row.beyaz),
+              mavi: Number(row.mavi)
+            });
+          });
+          const shifts = ["07-15", "15-23", "23-07"].map((shift) => {
+            const states = map.get(shift) || { sari: 0, kirmizi: 0, yesil: 0, beyaz: 0, mavi: 0 };
+            return { shift, states, cumulative: calcEfficiency(states) };
+          });
+          return res.json({ ok: true, period, date: dateKey, shifts });
+        })
+        .catch((err) => res.status(500).json({ ok: false, error: err.message }));
+    }
     return pool
       .query(
         `SELECT shift, sari, kirmizi, yesil, beyaz, mavi
@@ -761,18 +863,21 @@ app.get("/api/shifts", (req, res) => {
           const states = map.get(shift) || { sari: 0, kirmizi: 0, yesil: 0, beyaz: 0, mavi: 0 };
           return { shift, states, cumulative: calcEfficiency(states) };
         });
-        return res.json({ ok: true, month, shifts });
+        return res.json({ ok: true, period, month, shifts });
       })
       .catch((err) => res.status(500).json({ ok: false, error: err.message }));
   }
-  const db = readShiftStore();
-  const monthData = db[month] || {};
+  const sourceDb = period === "daily" ? readDailyShiftStore() : readShiftStore();
+  const sourceData = period === "daily" ? sourceDb[dateKey] || {} : sourceDb[month] || {};
   const shifts = ["07-15", "15-23", "23-07"].map((shift) => ({
     shift,
-    states: monthData[shift] || { sari: 0, kirmizi: 0, yesil: 0, beyaz: 0, mavi: 0 },
-    cumulative: calcEfficiency(monthData[shift] || {})
+    states: sourceData[shift] || { sari: 0, kirmizi: 0, yesil: 0, beyaz: 0, mavi: 0 },
+    cumulative: calcEfficiency(sourceData[shift] || {})
   }));
-  return res.json({ ok: true, month, shifts });
+  if (period === "daily") {
+    return res.json({ ok: true, period, date: dateKey, shifts });
+  }
+  return res.json({ ok: true, period, month, shifts });
 });
 app.get("/api/monthly.pdf", (req, res) => {
   const month = req.query.month || monthKeyFromTimestamp();
@@ -1008,6 +1113,7 @@ app.get("/api/monthly.pdf", (req, res) => {
 });
 
 app.get("/api/shift.pdf", (req, res) => {
+  const period = req.query.period === "daily" ? "daily" : "monthly";
   const month = req.query.month || monthKeyFromTimestamp();
   const shift = req.query.shift || "07-15";
   const reportDate = req.query.date || todayDateString();
@@ -1031,7 +1137,7 @@ app.get("/api/shift.pdf", (req, res) => {
     doc.moveDown(0.5);
     doc
       .fontSize(12)
-      .text(`Vardiya: ${shift} - Ay: ${month} - Tarih: ${reportDate} - Saat Dilimi: ${REPORT_TIMEZONE}`, {
+      .text(`Vardiya: ${shift} - Kapsam: ${period === "daily" ? "Gunluk" : "Aylik"} - Ay: ${month} - Tarih: ${reportDate} - Saat Dilimi: ${REPORT_TIMEZONE}`, {
         align: "center"
       });
     doc.moveDown();
@@ -1080,11 +1186,14 @@ app.get("/api/shift.pdf", (req, res) => {
   };
 
   if (useDb) {
+    const shiftTable = period === "daily" ? "shifts_daily" : "shifts";
+    const keyColumn = period === "daily" ? "date_key" : "month";
+    const keyValue = period === "daily" ? reportDate : month;
     return Promise.all([
       pool.query(
         `SELECT sari, kirmizi, yesil, beyaz, mavi
-         FROM shifts WHERE month = $1 AND shift = $2`,
-        [month, shift]
+         FROM ${shiftTable} WHERE ${keyColumn} = $1 AND shift = $2`,
+        [keyValue, shift]
       ),
       pool.query("SELECT stop_counts FROM status")
     ])
@@ -1111,10 +1220,10 @@ app.get("/api/shift.pdf", (req, res) => {
       .catch((err) => res.status(500).json({ ok: false, error: err.message }));
   }
 
-  const db = readShiftStore();
+  const db = period === "daily" ? readDailyShiftStore() : readShiftStore();
   const statusDb = readStatusStore();
-  const monthData = db[month] || {};
-  const states = monthData[shift] || {
+  const periodData = period === "daily" ? db[reportDate] || {} : db[month] || {};
+  const states = periodData[shift] || {
     sari: 0,
     kirmizi: 0,
     yesil: 0,

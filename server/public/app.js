@@ -52,6 +52,8 @@ const sortSelect = document.getElementById("setting-sort");
 const columnsSelect = document.getElementById("setting-columns");
 const largeTextCheckbox = document.getElementById("setting-large-text");
 const detailsOpenCheckbox = document.getElementById("setting-details-open");
+const shiftPeriodSelect = document.getElementById("setting-shift-period");
+const shiftDateInput = document.getElementById("setting-shift-date");
 const openLoomPanelBtn = document.getElementById("open-loom-panel");
 const openSettingsPanelBtn = document.getElementById("open-settings-panel");
 const loomPanel = document.getElementById("loom-panel");
@@ -87,7 +89,9 @@ const defaultUiSettings = {
   sortBy: "tezgah_asc",
   columns: "auto",
   largeText: false,
-  detailsOpenAll: false
+  detailsOpenAll: false,
+  shiftPeriod: "monthly",
+  shiftDate: ""
 };
 
 function nowInReportTimezone() {
@@ -152,7 +156,12 @@ function readUiSettings() {
         ? String(parsed.columns)
         : "auto",
       largeText: parsed.largeText === true,
-      detailsOpenAll: parsed.detailsOpenAll === true
+      detailsOpenAll: parsed.detailsOpenAll === true,
+      shiftPeriod: parsed.shiftPeriod === "daily" ? "daily" : "monthly",
+      shiftDate:
+        typeof parsed.shiftDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.shiftDate)
+          ? parsed.shiftDate
+          : ""
     };
   } catch (err) {
     return { ...defaultUiSettings };
@@ -403,7 +412,12 @@ async function fetchMonthly() {
 }
 
 async function fetchShifts() {
-  const res = await apiFetch("/api/shifts", { cache: "no-store" });
+  const params = new URLSearchParams();
+  params.set("period", uiSettings.shiftPeriod);
+  if (uiSettings.shiftPeriod === "daily") {
+    params.set("date", uiSettings.shiftDate || todayIsoDate());
+  }
+  const res = await apiFetch(`/api/shifts?${params.toString()}`, { cache: "no-store" });
   if (!res.ok) {
     throw new Error("Fetch failed");
   }
@@ -551,6 +565,7 @@ async function refresh() {
     applyAdjustedRandiman(rawItems);
     const items = sortAndFilterItems(rawItems);
     const monthly = (await fetchMonthly()).filter((i) => parseTezgahId(i.tezgahId));
+    const reasonsSource = monthly.length > 0 ? monthly : rawItems;
     const shifts = await fetchShifts();
     updateSummary(items);
     if (items.length === 0) {
@@ -569,8 +584,8 @@ async function refresh() {
     }
     lastDetectedShiftKey = detectedShiftKey;
     renderShiftTabs(shifts);
-    updateReasonChart(monthly);
-    updateStopCounts(items);
+    updateReasonChart(reasonsSource);
+    updateStopCounts(rawItems);
     updateDistribution(items);
     updateTezgahChart(items);
     const now = new Date();
@@ -621,6 +636,9 @@ function confirmDownload() {
 }
 
 function applySettingsInputs() {
+  if (!uiSettings.shiftDate) {
+    uiSettings.shiftDate = todayIsoDate();
+  }
   if (cardShapeSelect) cardShapeSelect.value = uiSettings.cardShape;
   if (densitySelect) densitySelect.value = uiSettings.density;
   if (refreshSelect) refreshSelect.value = String(uiSettings.refreshSeconds);
@@ -630,6 +648,8 @@ function applySettingsInputs() {
   if (columnsSelect) columnsSelect.value = uiSettings.columns;
   if (largeTextCheckbox) largeTextCheckbox.checked = uiSettings.largeText;
   if (detailsOpenCheckbox) detailsOpenCheckbox.checked = uiSettings.detailsOpenAll;
+  if (shiftPeriodSelect) shiftPeriodSelect.value = uiSettings.shiftPeriod;
+  if (shiftDateInput) shiftDateInput.value = uiSettings.shiftDate;
 }
 
 function closePanels() {
@@ -703,19 +723,22 @@ shiftTabBtns.forEach((btn) => {
 if (downloadShift1Btn) {
   downloadShift1Btn.addEventListener("click", () => {
     if (!confirmDownload()) return;
-    window.location.href = `/api/shift.pdf?shift=07-15&date=${todayIsoDate()}`;
+    const date = uiSettings.shiftDate || todayIsoDate();
+    window.location.href = `/api/shift.pdf?shift=07-15&period=${uiSettings.shiftPeriod}&date=${date}`;
   });
 }
 if (downloadShift2Btn) {
   downloadShift2Btn.addEventListener("click", () => {
     if (!confirmDownload()) return;
-    window.location.href = `/api/shift.pdf?shift=15-23&date=${todayIsoDate()}`;
+    const date = uiSettings.shiftDate || todayIsoDate();
+    window.location.href = `/api/shift.pdf?shift=15-23&period=${uiSettings.shiftPeriod}&date=${date}`;
   });
 }
 if (downloadShift3Btn) {
   downloadShift3Btn.addEventListener("click", () => {
     if (!confirmDownload()) return;
-    window.location.href = `/api/shift.pdf?shift=23-07&date=${todayIsoDate()}`;
+    const date = uiSettings.shiftDate || todayIsoDate();
+    window.location.href = `/api/shift.pdf?shift=23-07&period=${uiSettings.shiftPeriod}&date=${date}`;
   });
 }
 
@@ -869,6 +892,27 @@ if (detailsOpenCheckbox) {
     uiSettings.detailsOpenAll = Boolean(detailsOpenCheckbox.checked);
     persistUiSettings();
     refresh();
+  });
+}
+
+if (shiftPeriodSelect) {
+  shiftPeriodSelect.addEventListener("change", () => {
+    uiSettings.shiftPeriod = shiftPeriodSelect.value === "daily" ? "daily" : "monthly";
+    persistUiSettings();
+    refresh();
+  });
+}
+
+if (shiftDateInput) {
+  shiftDateInput.addEventListener("change", () => {
+    uiSettings.shiftDate =
+      shiftDateInput.value && /^\d{4}-\d{2}-\d{2}$/.test(shiftDateInput.value)
+        ? shiftDateInput.value
+        : todayIsoDate();
+    persistUiSettings();
+    if (uiSettings.shiftPeriod === "daily") {
+      refresh();
+    }
   });
 }
 

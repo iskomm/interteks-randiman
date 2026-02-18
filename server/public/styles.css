@@ -358,6 +358,14 @@ body.panel-open {
   color: #e8eef6;
 }
 
+.settings-item input[type="date"] {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #2b3143;
+  background: #0f1115;
+  color: #e8eef6;
+}
+
 .settings-item-inline {
   display: flex;
   align-items: center;
@@ -829,7 +837,8 @@ body.cards-3 #cards.cards {
 
   .meta-form input,
   .meta-form button,
-  .settings-item select {
+  .settings-item select,
+  .settings-item input[type="date"] {
     width: 100%;
   }
 
