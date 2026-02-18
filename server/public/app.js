@@ -426,6 +426,24 @@ function updateTezgahChart(items) {
   tezgahChartEl.innerHTML = bars.join("");
 }
 
+function bindCardDetailsState() {
+  const detailEls = cardsEl.querySelectorAll(".card-details[data-tezgah-id]");
+  detailEls.forEach((details) => {
+    const tezgahId = details.dataset.tezgahId;
+    if (!tezgahId) return;
+    details.open = openCardDetails.has(tezgahId);
+    if (details.dataset.boundToggle === "1") return;
+    details.addEventListener("toggle", () => {
+      if (details.open) {
+        openCardDetails.add(tezgahId);
+      } else {
+        openCardDetails.delete(tezgahId);
+      }
+    });
+    details.dataset.boundToggle = "1";
+  });
+}
+
 async function refresh() {
   try {
     const items = (await fetchData()).filter((i) => parseTezgahId(i.tezgahId));
@@ -439,6 +457,7 @@ async function refresh() {
     } else {
       emptyEl.classList.add("hidden");
       cardsEl.innerHTML = items.map(renderCard).join("");
+      bindCardDetailsState();
     }
     monthlyEl.innerHTML = monthly.map(renderMonthlyCard).join("");
     const detectedShiftKey = shiftKeyForNow();
@@ -624,18 +643,6 @@ cardsEl.addEventListener("click", (event) => {
   const setBtn = event.target.closest(".cut-meter-set");
   if (setBtn) {
     submitCutMetre(setBtn.dataset.tezgahId, "set");
-  }
-});
-
-cardsEl.addEventListener("toggle", (event) => {
-  const details = event.target;
-  if (!details.classList || !details.classList.contains("card-details")) return;
-  const tezgahId = details.dataset.tezgahId;
-  if (!tezgahId) return;
-  if (details.open) {
-    openCardDetails.add(tezgahId);
-  } else {
-    openCardDetails.delete(tezgahId);
   }
 });
 
