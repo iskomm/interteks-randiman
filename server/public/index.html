@@ -18,6 +18,7 @@
         <div class="meta">
           <div id="last-updated">Son guncelleme: -</div>
           <button id="refresh-btn">Yenile</button>
+          <button id="toggle-simple-ui">Basit Gorunum: Acik</button>
           <div class="meta-actions">
             <button id="open-loom-panel" class="icon-btn" title="Tezgah Bilgi Girisi">
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -56,7 +57,7 @@
         </div>
       </section>
 
-      <section class="distribution">
+      <section class="distribution advanced-block">
         <div class="section-title">Randiman Dagilimi</div>
         <div class="dist-list">
           <div class="dist-row">
@@ -82,14 +83,14 @@
         </div>
       </section>
 
-      <section class="chart-section">
+      <section class="chart-section advanced-block">
         <div class="section-title">Tezgah Randiman Grafigi (T-001..T-100)</div>
         <div class="chart-wrap">
           <div id="tezgah-chart" class="tezgah-chart"></div>
         </div>
       </section>
 
-      <section>
+      <section class="advanced-block">
         <div class="section-title">Durus Nedenleri (Bu Ay)</div>
         <div id="reasons" class="reasons">
           <div class="reason" data-key="sari">
@@ -122,7 +123,7 @@
         </div>
       </section>
 
-      <section>
+      <section class="advanced-block">
         <div class="section-title">Vardiyalar (Bu Ay)</div>
         <div class="tabs">
           <button class="tab-btn is-active" data-shift="07-15">Vardiya 1</button>
@@ -176,6 +177,7 @@
         <div class="section-title">Ayarlar</div>
         <button class="side-panel-close" data-close-panel>x</button>
       </div>
+      <div class="settings-subtitle">Hizli Ayarlar</div>
       <div class="settings-grid">
         <label class="settings-item">
           <span>Kart Sekli</span>
@@ -208,6 +210,11 @@
           <input id="setting-active-only" type="checkbox" />
           <span>Sadece Calisan Tezgahlar</span>
         </label>
+      </div>
+
+      <details class="settings-advanced">
+        <summary>Gelismis Ayarlar</summary>
+        <div class="settings-grid">
         <label class="settings-item">
           <span>Kart Siralama</span>
           <select id="setting-sort">
@@ -245,7 +252,9 @@
           <span>Vardiya Tarihi</span>
           <input id="setting-shift-date" type="date" />
         </label>
-      </div>
+        </div>
+      </details>
+      <div class="settings-note">Not: Hizli ayarlar gunluk kullanim icin yeterlidir.</div>
     </aside>
 
     <script src="app.js"></script>

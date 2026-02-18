@@ -54,6 +54,12 @@ body {
   color: #93a1b8;
 }
 
+#toggle-simple-ui {
+  background: #1d2434;
+  border-color: #313b54;
+  color: #c9d6ef;
+}
+
 .meta-actions {
   display: flex;
   align-items: center;
@@ -336,6 +342,12 @@ body.panel-open {
   gap: 10px;
 }
 
+.settings-subtitle {
+  font-size: 12px;
+  color: #93a1b8;
+  margin-bottom: 8px;
+}
+
 .settings-item {
   display: grid;
   gap: 6px;
@@ -375,6 +387,27 @@ body.panel-open {
 .settings-item-inline input {
   width: 16px;
   height: 16px;
+}
+
+.settings-advanced {
+  margin-top: 10px;
+  border: 1px solid #2b3348;
+  border-radius: 10px;
+  padding: 10px;
+  background: #101726;
+}
+
+.settings-advanced summary {
+  cursor: pointer;
+  color: #c8d5ee;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.settings-note {
+  font-size: 11px;
+  color: #7f8da8;
+  margin-top: 10px;
 }
 
 .reasons {
@@ -473,6 +506,18 @@ body.panel-open {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 12px;
+}
+
+body.simple-ui .advanced-block {
+  display: none;
+}
+
+body.simple-ui .container {
+  padding-top: 14px;
+}
+
+body.simple-ui #cards.cards {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
 .monthly-card {
@@ -745,6 +790,10 @@ body.cards-3 #cards.cards {
     justify-content: flex-start;
     flex-wrap: wrap;
     gap: 8px;
+  }
+
+  #toggle-simple-ui {
+    width: 100%;
   }
 
   .meta-actions {

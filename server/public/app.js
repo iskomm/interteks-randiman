@@ -7,6 +7,7 @@ const activeCountEl = document.getElementById("active-count");
 const avgEfficiencyEl = document.getElementById("avg-efficiency");
 const lastUpdatedEl = document.getElementById("last-updated");
 const refreshBtn = document.getElementById("refresh-btn");
+const toggleSimpleUiBtn = document.getElementById("toggle-simple-ui");
 const metaForm = document.getElementById("meta-form");
 const metaStatus = document.getElementById("meta-status");
 const tezgahIdInput = document.getElementById("tezgah-id");
@@ -91,7 +92,8 @@ const defaultUiSettings = {
   largeText: false,
   detailsOpenAll: false,
   shiftPeriod: "monthly",
-  shiftDate: ""
+  shiftDate: "",
+  simpleMode: true
 };
 
 function nowInReportTimezone() {
@@ -161,7 +163,8 @@ function readUiSettings() {
       shiftDate:
         typeof parsed.shiftDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.shiftDate)
           ? parsed.shiftDate
-          : ""
+          : "",
+      simpleMode: parsed.simpleMode !== false
     };
   } catch (err) {
     return { ...defaultUiSettings };
@@ -186,6 +189,10 @@ function applyUiSettings() {
   document.body.classList.toggle("cards-1", uiSettings.columns === "1");
   document.body.classList.toggle("cards-2", uiSettings.columns === "2");
   document.body.classList.toggle("cards-3", uiSettings.columns === "3");
+  document.body.classList.toggle("simple-ui", uiSettings.simpleMode);
+  if (toggleSimpleUiBtn) {
+    toggleSimpleUiBtn.textContent = `Basit Gorunum: ${uiSettings.simpleMode ? "Acik" : "Kapali"}`;
+  }
 }
 
 function baseRandiman(item) {
@@ -892,6 +899,14 @@ if (detailsOpenCheckbox) {
     uiSettings.detailsOpenAll = Boolean(detailsOpenCheckbox.checked);
     persistUiSettings();
     refresh();
+  });
+}
+
+if (toggleSimpleUiBtn) {
+  toggleSimpleUiBtn.addEventListener("click", () => {
+    uiSettings.simpleMode = !uiSettings.simpleMode;
+    applyUiSettings();
+    persistUiSettings();
   });
 }
 
