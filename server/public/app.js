@@ -611,7 +611,7 @@ function todayIsoDate() {
 }
 
 function confirmDownload() {
-  return window.confirm("PDF indirmeden once ESP32 hafizayi temizlemeyin. Devam edilsin mi?");
+  return true;
 }
 
 function applySettingsInputs() {
