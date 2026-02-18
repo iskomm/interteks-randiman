@@ -43,6 +43,15 @@ const distMidCountEl = document.getElementById("dist-mid-count");
 const distHighCountEl = document.getElementById("dist-high-count");
 const distTopCountEl = document.getElementById("dist-top-count");
 const tezgahChartEl = document.getElementById("tezgah-chart");
+const cardShapeSelect = document.getElementById("setting-card-shape");
+const densitySelect = document.getElementById("setting-density");
+const refreshSelect = document.getElementById("setting-refresh");
+const showChartCheckbox = document.getElementById("setting-show-chart");
+const activeOnlyCheckbox = document.getElementById("setting-active-only");
+const sortSelect = document.getElementById("setting-sort");
+const columnsSelect = document.getElementById("setting-columns");
+const largeTextCheckbox = document.getElementById("setting-large-text");
+const detailsOpenCheckbox = document.getElementById("setting-details-open");
 
 const STATE_ORDER = ["mavi", "yesil", "sari", "kirmizi", "beyaz"];
 const REASON_KEYS = ["sari", "kirmizi", "yesil", "beyaz"];
@@ -62,6 +71,18 @@ const SHIFT_LABELS = {
   "23-07": "Vardiya 3"
 };
 const REPORT_TIMEZONE = "Europe/Istanbul";
+const SETTINGS_STORAGE_KEY = "interteks.dashboard.settings.v1";
+const defaultUiSettings = {
+  cardShape: "rounded",
+  density: "comfortable",
+  refreshSeconds: 10,
+  showChart: true,
+  activeOnly: false,
+  sortBy: "tezgah_asc",
+  columns: "auto",
+  largeText: false,
+  detailsOpenAll: false
+};
 
 function nowInReportTimezone() {
   return new Date(
@@ -101,6 +122,55 @@ function fmtMetre(value) {
   const n = toNumber(value);
   if (Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
   return n.toFixed(2);
+}
+
+function readUiSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (!raw) return { ...defaultUiSettings };
+    const parsed = JSON.parse(raw);
+    return {
+      cardShape: parsed.cardShape === "square" ? "square" : "rounded",
+      density: parsed.density === "compact" ? "compact" : "comfortable",
+      refreshSeconds: [5, 10, 20, 30].includes(Number(parsed.refreshSeconds))
+        ? Number(parsed.refreshSeconds)
+        : 10,
+      showChart: parsed.showChart !== false,
+      activeOnly: parsed.activeOnly === true,
+      sortBy: ["tezgah_asc", "tezgah_desc", "randiman_desc", "randiman_asc"].includes(
+        parsed.sortBy
+      )
+        ? parsed.sortBy
+        : "tezgah_asc",
+      columns: ["auto", "1", "2", "3"].includes(String(parsed.columns))
+        ? String(parsed.columns)
+        : "auto",
+      largeText: parsed.largeText === true,
+      detailsOpenAll: parsed.detailsOpenAll === true
+    };
+  } catch (err) {
+    return { ...defaultUiSettings };
+  }
+}
+
+let uiSettings = readUiSettings();
+
+function persistUiSettings() {
+  try {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(uiSettings));
+  } catch (err) {
+    // ignore storage errors
+  }
+}
+
+function applyUiSettings() {
+  document.body.classList.toggle("card-shape-square", uiSettings.cardShape === "square");
+  document.body.classList.toggle("density-compact", uiSettings.density === "compact");
+  document.body.classList.toggle("hide-tezgah-chart", !uiSettings.showChart);
+  document.body.classList.toggle("text-large", uiSettings.largeText);
+  document.body.classList.toggle("cards-1", uiSettings.columns === "1");
+  document.body.classList.toggle("cards-2", uiSettings.columns === "2");
+  document.body.classList.toggle("cards-3", uiSettings.columns === "3");
 }
 
 function baseRandiman(item) {
@@ -426,12 +496,37 @@ function updateTezgahChart(items) {
   tezgahChartEl.innerHTML = bars.join("");
 }
 
+function sortAndFilterItems(items) {
+  const filtered = uiSettings.activeOnly
+    ? items.filter((item) => item.aktifDurum === "mavi")
+    : items.slice();
+  filtered.sort((a, b) => {
+    if (uiSettings.sortBy === "tezgah_desc") {
+      return (parseTezgahId(b.tezgahId) || 0) - (parseTezgahId(a.tezgahId) || 0);
+    }
+    if (uiSettings.sortBy === "randiman_desc") {
+      return (
+        toNumber(b.adjustedRandiman ?? b.cumulative?.randiman) -
+        toNumber(a.adjustedRandiman ?? a.cumulative?.randiman)
+      );
+    }
+    if (uiSettings.sortBy === "randiman_asc") {
+      return (
+        toNumber(a.adjustedRandiman ?? a.cumulative?.randiman) -
+        toNumber(b.adjustedRandiman ?? b.cumulative?.randiman)
+      );
+    }
+    return (parseTezgahId(a.tezgahId) || 0) - (parseTezgahId(b.tezgahId) || 0);
+  });
+  return filtered;
+}
+
 function bindCardDetailsState() {
   const detailEls = cardsEl.querySelectorAll(".card-details[data-tezgah-id]");
   detailEls.forEach((details) => {
     const tezgahId = details.dataset.tezgahId;
     if (!tezgahId) return;
-    details.open = openCardDetails.has(tezgahId);
+    details.open = uiSettings.detailsOpenAll || openCardDetails.has(tezgahId);
     if (details.dataset.boundToggle === "1") return;
     details.addEventListener("toggle", () => {
       if (details.open) {
@@ -446,8 +541,9 @@ function bindCardDetailsState() {
 
 async function refresh() {
   try {
-    const items = (await fetchData()).filter((i) => parseTezgahId(i.tezgahId));
-    applyAdjustedRandiman(items);
+    const rawItems = (await fetchData()).filter((i) => parseTezgahId(i.tezgahId));
+    applyAdjustedRandiman(rawItems);
+    const items = sortAndFilterItems(rawItems);
     const monthly = (await fetchMonthly()).filter((i) => parseTezgahId(i.tezgahId));
     const shifts = await fetchShifts();
     updateSummary(items);
@@ -495,6 +591,7 @@ let cachedShifts = [];
 let userSelectedShift = false;
 let lastDetectedShiftKey = shiftKeyForNow();
 const openCardDetails = new Set();
+let periodicRefreshTimer = null;
 
 function renderShiftTabs(shifts) {
   cachedShifts = shifts;
@@ -517,6 +614,18 @@ function confirmDownload() {
   return window.confirm("PDF indirmeden once ESP32 hafizayi temizlemeyin. Devam edilsin mi?");
 }
 
+function applySettingsInputs() {
+  if (cardShapeSelect) cardShapeSelect.value = uiSettings.cardShape;
+  if (densitySelect) densitySelect.value = uiSettings.density;
+  if (refreshSelect) refreshSelect.value = String(uiSettings.refreshSeconds);
+  if (showChartCheckbox) showChartCheckbox.checked = uiSettings.showChart;
+  if (activeOnlyCheckbox) activeOnlyCheckbox.checked = uiSettings.activeOnly;
+  if (sortSelect) sortSelect.value = uiSettings.sortBy;
+  if (columnsSelect) columnsSelect.value = uiSettings.columns;
+  if (largeTextCheckbox) largeTextCheckbox.checked = uiSettings.largeText;
+  if (detailsOpenCheckbox) detailsOpenCheckbox.checked = uiSettings.detailsOpenAll;
+}
+
 let liveSource = null;
 let liveRefreshTimer = null;
 
@@ -537,6 +646,18 @@ function startLiveUpdates() {
       scheduleLiveRefresh();
     }
   };
+}
+
+function restartPeriodicRefresh() {
+  if (periodicRefreshTimer) {
+    clearInterval(periodicRefreshTimer);
+    periodicRefreshTimer = null;
+  }
+  periodicRefreshTimer = setInterval(() => {
+    if (!appScreen.classList.contains("hidden")) {
+      refresh();
+    }
+  }, uiSettings.refreshSeconds * 1000);
 }
 
 refreshBtn.addEventListener("click", refresh);
@@ -646,11 +767,88 @@ cardsEl.addEventListener("click", (event) => {
   }
 });
 
+if (cardShapeSelect) {
+  cardShapeSelect.addEventListener("change", () => {
+    uiSettings.cardShape = cardShapeSelect.value === "square" ? "square" : "rounded";
+    applyUiSettings();
+    persistUiSettings();
+  });
+}
+
+if (densitySelect) {
+  densitySelect.addEventListener("change", () => {
+    uiSettings.density = densitySelect.value === "compact" ? "compact" : "comfortable";
+    applyUiSettings();
+    persistUiSettings();
+  });
+}
+
+if (refreshSelect) {
+  refreshSelect.addEventListener("change", () => {
+    uiSettings.refreshSeconds = [5, 10, 20, 30].includes(Number(refreshSelect.value))
+      ? Number(refreshSelect.value)
+      : 10;
+    persistUiSettings();
+    restartPeriodicRefresh();
+  });
+}
+
+if (showChartCheckbox) {
+  showChartCheckbox.addEventListener("change", () => {
+    uiSettings.showChart = Boolean(showChartCheckbox.checked);
+    applyUiSettings();
+    persistUiSettings();
+  });
+}
+
+if (activeOnlyCheckbox) {
+  activeOnlyCheckbox.addEventListener("change", () => {
+    uiSettings.activeOnly = Boolean(activeOnlyCheckbox.checked);
+    persistUiSettings();
+    refresh();
+  });
+}
+
+if (sortSelect) {
+  sortSelect.addEventListener("change", () => {
+    uiSettings.sortBy = ["tezgah_asc", "tezgah_desc", "randiman_desc", "randiman_asc"].includes(
+      sortSelect.value
+    )
+      ? sortSelect.value
+      : "tezgah_asc";
+    persistUiSettings();
+    refresh();
+  });
+}
+
+if (columnsSelect) {
+  columnsSelect.addEventListener("change", () => {
+    uiSettings.columns = ["auto", "1", "2", "3"].includes(columnsSelect.value)
+      ? columnsSelect.value
+      : "auto";
+    applyUiSettings();
+    persistUiSettings();
+  });
+}
+
+if (largeTextCheckbox) {
+  largeTextCheckbox.addEventListener("change", () => {
+    uiSettings.largeText = Boolean(largeTextCheckbox.checked);
+    applyUiSettings();
+    persistUiSettings();
+  });
+}
+
+if (detailsOpenCheckbox) {
+  detailsOpenCheckbox.addEventListener("change", () => {
+    uiSettings.detailsOpenAll = Boolean(detailsOpenCheckbox.checked);
+    persistUiSettings();
+    refresh();
+  });
+}
+
+applyUiSettings();
+applySettingsInputs();
 refresh();
 startLiveUpdates();
-
-setInterval(() => {
-  if (!appScreen.classList.contains("hidden")) {
-    refresh();
-  }
-}, 10000);
+restartPeriodicRefresh();

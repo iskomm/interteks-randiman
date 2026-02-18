@@ -265,6 +265,49 @@ button {
   margin-top: 6px;
 }
 
+.settings-section {
+  margin-bottom: 16px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.settings-item {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid #232838;
+  border-radius: 10px;
+  background: #121723;
+}
+
+.settings-item span {
+  font-size: 12px;
+  color: #93a1b8;
+}
+
+.settings-item select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #2b3143;
+  background: #0f1115;
+  color: #e8eef6;
+}
+
+.settings-item-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-item-inline input {
+  width: 16px;
+  height: 16px;
+}
+
 .reasons {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -512,6 +555,57 @@ button {
   min-height: 14px;
 }
 
+body.card-shape-square .card,
+body.card-shape-square .monthly-card,
+body.card-shape-square .summary-card,
+body.card-shape-square .reason,
+body.card-shape-square .settings-item {
+  border-radius: 4px;
+}
+
+body.card-shape-square .cut-meter-box,
+body.card-shape-square .card-details {
+  border-radius: 4px;
+}
+
+body.density-compact .row {
+  padding: 6px 2px;
+  font-size: 12px;
+}
+
+body.density-compact .card,
+body.density-compact .monthly-card {
+  padding: 10px;
+}
+
+body.hide-tezgah-chart .chart-section {
+  display: none;
+}
+
+body.text-large {
+  font-size: 16px;
+}
+
+body.text-large .row {
+  font-size: 14px;
+}
+
+body.text-large .summary-card .value {
+  font-size: 26px;
+}
+
+body.cards-1 #cards.cards {
+  grid-template-columns: 1fr;
+}
+
+body.cards-2 #cards.cards {
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+}
+
+body.cards-3 #cards.cards {
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+}
+
 .empty {
   padding: 16px;
   background: #151821;
@@ -654,8 +748,18 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.cards-2 #cards.cards,
+  body.cards-3 #cards.cards {
+    grid-template-columns: 1fr;
+  }
+
   .meta-form input,
-  .meta-form button {
+  .meta-form button,
+  .settings-item select {
     width: 100%;
   }
 
