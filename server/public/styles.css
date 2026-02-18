@@ -54,6 +54,26 @@ body {
   color: #93a1b8;
 }
 
+.meta-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
 .sound-visual {
   display: flex;
   align-items: flex-end;
@@ -263,6 +283,47 @@ button {
   font-size: 12px;
   color: #93a1b8;
   margin-top: 6px;
+}
+
+.panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 8, 14, 0.55);
+  backdrop-filter: blur(1px);
+  z-index: 30;
+}
+
+.side-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(440px, 96vw);
+  height: 100vh;
+  overflow-y: auto;
+  background: #121827;
+  border-left: 1px solid #2a3348;
+  padding: 16px;
+  z-index: 40;
+  box-shadow: -16px 0 34px rgba(0, 0, 0, 0.35);
+}
+
+.side-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.side-panel-close {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+}
+
+body.panel-open {
+  overflow: hidden;
 }
 
 .settings-section {
@@ -678,6 +739,10 @@ body.cards-3 #cards.cards {
     gap: 8px;
   }
 
+  .meta-actions {
+    margin-left: auto;
+  }
+
   .container {
     padding: 12px;
   }
@@ -750,6 +815,11 @@ body.cards-3 #cards.cards {
 
   .settings-grid {
     grid-template-columns: 1fr;
+  }
+
+  .side-panel {
+    width: 100vw;
+    padding: 14px 12px;
   }
 
   body.cards-2 #cards.cards,

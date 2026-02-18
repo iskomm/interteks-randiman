@@ -52,6 +52,12 @@ const sortSelect = document.getElementById("setting-sort");
 const columnsSelect = document.getElementById("setting-columns");
 const largeTextCheckbox = document.getElementById("setting-large-text");
 const detailsOpenCheckbox = document.getElementById("setting-details-open");
+const openLoomPanelBtn = document.getElementById("open-loom-panel");
+const openSettingsPanelBtn = document.getElementById("open-settings-panel");
+const loomPanel = document.getElementById("loom-panel");
+const settingsPanel = document.getElementById("settings-panel");
+const panelOverlay = document.getElementById("panel-overlay");
+const closePanelBtns = Array.from(document.querySelectorAll("[data-close-panel]"));
 
 const STATE_ORDER = ["mavi", "yesil", "sari", "kirmizi", "beyaz"];
 const REASON_KEYS = ["sari", "kirmizi", "yesil", "beyaz"];
@@ -626,6 +632,25 @@ function applySettingsInputs() {
   if (detailsOpenCheckbox) detailsOpenCheckbox.checked = uiSettings.detailsOpenAll;
 }
 
+function closePanels() {
+  [loomPanel, settingsPanel].forEach((panel) => {
+    if (!panel) return;
+    panel.classList.add("hidden");
+    panel.setAttribute("aria-hidden", "true");
+  });
+  if (panelOverlay) panelOverlay.classList.add("hidden");
+  document.body.classList.remove("panel-open");
+}
+
+function openPanel(panel) {
+  if (!panel) return;
+  closePanels();
+  panel.classList.remove("hidden");
+  panel.setAttribute("aria-hidden", "false");
+  if (panelOverlay) panelOverlay.classList.remove("hidden");
+  document.body.classList.add("panel-open");
+}
+
 let liveSource = null;
 let liveRefreshTimer = null;
 
@@ -846,6 +871,26 @@ if (detailsOpenCheckbox) {
     refresh();
   });
 }
+
+if (openLoomPanelBtn) {
+  openLoomPanelBtn.addEventListener("click", () => openPanel(loomPanel));
+}
+
+if (openSettingsPanelBtn) {
+  openSettingsPanelBtn.addEventListener("click", () => openPanel(settingsPanel));
+}
+
+if (panelOverlay) {
+  panelOverlay.addEventListener("click", closePanels);
+}
+
+closePanelBtns.forEach((btn) => {
+  btn.addEventListener("click", closePanels);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closePanels();
+});
 
 applyUiSettings();
 applySettingsInputs();

@@ -18,6 +18,18 @@
         <div class="meta">
           <div id="last-updated">Son guncelleme: -</div>
           <button id="refresh-btn">Yenile</button>
+          <div class="meta-actions">
+            <button id="open-loom-panel" class="icon-btn" title="Tezgah Bilgi Girisi">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 6h18v2H3V6zm2 4h14v2H5v-2zm-2 4h18v2H3v-2zm2 4h14v2H5v-2zM7 4h2v16H7V4zm8 0h2v16h-2V4z"></path>
+              </svg>
+            </button>
+            <button id="open-settings-panel" class="icon-btn" title="Ayarlar">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19.4 13a7.8 7.8 0 0 0 .1-1l2-1.5-2-3.4-2.4 1a8.6 8.6 0 0 0-1.7-1l-.4-2.6h-4l-.4 2.6a8.6 8.6 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.5a7.8 7.8 0 0 0 .1 1l-2 1.5 2 3.4 2.4-1a8.6 8.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a8.6 8.6 0 0 0 1.7-1l2.4 1 2-3.4-2-1.5zM12 15.2A3.2 3.2 0 1 1 12 8.8a3.2 3.2 0 0 1 0 6.4z"></path>
+              </svg>
+            </button>
+          </div>
           <div class="sound-visual" aria-hidden="true">
             <span></span>
             <span></span>
@@ -74,83 +86,6 @@
         <div class="section-title">Tezgah Randiman Grafigi (T-001..T-100)</div>
         <div class="chart-wrap">
           <div id="tezgah-chart" class="tezgah-chart"></div>
-        </div>
-      </section>
-
-      <section class="form-section">
-        <div class="section-title">Tezgah Bilgisi Girisi</div>
-        <form id="meta-form" class="meta-form">
-          <input id="tezgah-id" placeholder="Tezgah ID (or. T-001)" required />
-          <input id="desen" placeholder="Desen" />
-          <input id="atki" placeholder="Atki sikligi" />
-          <input id="devir" placeholder="Devir (rpm)" />
-          <input id="siparis-metre" placeholder="Siparis Metre (m)" />
-          <input id="teslim-metre" placeholder="Teslim Metre (m)" />
-          <button type="submit">Kaydet</button>
-        </form>
-        <div id="meta-status" class="form-status"></div>
-      </section>
-
-      <section class="settings-section">
-        <div class="section-title">Ayarlar</div>
-        <div class="settings-grid">
-          <label class="settings-item">
-            <span>Kart Sekli</span>
-            <select id="setting-card-shape">
-              <option value="rounded">Mevcut (Yuvarlak)</option>
-              <option value="square">Kare</option>
-            </select>
-          </label>
-          <label class="settings-item">
-            <span>Gorunum Yogunlugu</span>
-            <select id="setting-density">
-              <option value="comfortable">Rahat</option>
-              <option value="compact">Sik</option>
-            </select>
-          </label>
-          <label class="settings-item">
-            <span>Otomatik Yenileme</span>
-            <select id="setting-refresh">
-              <option value="5">5 sn</option>
-              <option value="10">10 sn</option>
-              <option value="20">20 sn</option>
-              <option value="30">30 sn</option>
-            </select>
-          </label>
-          <label class="settings-item settings-item-inline">
-            <input id="setting-show-chart" type="checkbox" checked />
-            <span>Tezgah Grafigini Goster</span>
-          </label>
-          <label class="settings-item settings-item-inline">
-            <input id="setting-active-only" type="checkbox" />
-            <span>Sadece Calisan Tezgahlar</span>
-          </label>
-          <label class="settings-item">
-            <span>Kart Siralama</span>
-            <select id="setting-sort">
-              <option value="tezgah_asc">Tezgah No (Artan)</option>
-              <option value="tezgah_desc">Tezgah No (Azalan)</option>
-              <option value="randiman_desc">Randiman (Yuksek -> Dusuk)</option>
-              <option value="randiman_asc">Randiman (Dusuk -> Yuksek)</option>
-            </select>
-          </label>
-          <label class="settings-item">
-            <span>Kart Sutun Sayisi</span>
-            <select id="setting-columns">
-              <option value="auto">Otomatik</option>
-              <option value="1">1 Sutun</option>
-              <option value="2">2 Sutun</option>
-              <option value="3">3 Sutun</option>
-            </select>
-          </label>
-          <label class="settings-item settings-item-inline">
-            <input id="setting-large-text" type="checkbox" />
-            <span>Buyuk Yazi Modu</span>
-          </label>
-          <label class="settings-item settings-item-inline">
-            <input id="setting-details-open" type="checkbox" />
-            <span>Detaylari Acik Tut</span>
-          </label>
         </div>
       </section>
 
@@ -216,6 +151,91 @@
         <div id="empty" class="empty hidden">Henuz veri yok.</div>
       </section>
     </main>
+
+    <div id="panel-overlay" class="panel-overlay hidden"></div>
+
+    <aside id="loom-panel" class="side-panel hidden" aria-hidden="true">
+      <div class="side-panel-header">
+        <div class="section-title">Tezgah Bilgisi Girisi</div>
+        <button class="side-panel-close" data-close-panel>x</button>
+      </div>
+      <form id="meta-form" class="meta-form">
+        <input id="tezgah-id" placeholder="Tezgah ID (or. T-001)" required />
+        <input id="desen" placeholder="Desen" />
+        <input id="atki" placeholder="Atki sikligi" />
+        <input id="devir" placeholder="Devir (rpm)" />
+        <input id="siparis-metre" placeholder="Siparis Metre (m)" />
+        <input id="teslim-metre" placeholder="Teslim Metre (m)" />
+        <button type="submit">Kaydet</button>
+      </form>
+      <div id="meta-status" class="form-status"></div>
+    </aside>
+
+    <aside id="settings-panel" class="side-panel hidden" aria-hidden="true">
+      <div class="side-panel-header">
+        <div class="section-title">Ayarlar</div>
+        <button class="side-panel-close" data-close-panel>x</button>
+      </div>
+      <div class="settings-grid">
+        <label class="settings-item">
+          <span>Kart Sekli</span>
+          <select id="setting-card-shape">
+            <option value="rounded">Mevcut (Yuvarlak)</option>
+            <option value="square">Kare</option>
+          </select>
+        </label>
+        <label class="settings-item">
+          <span>Gorunum Yogunlugu</span>
+          <select id="setting-density">
+            <option value="comfortable">Rahat</option>
+            <option value="compact">Sik</option>
+          </select>
+        </label>
+        <label class="settings-item">
+          <span>Otomatik Yenileme</span>
+          <select id="setting-refresh">
+            <option value="5">5 sn</option>
+            <option value="10">10 sn</option>
+            <option value="20">20 sn</option>
+            <option value="30">30 sn</option>
+          </select>
+        </label>
+        <label class="settings-item settings-item-inline">
+          <input id="setting-show-chart" type="checkbox" checked />
+          <span>Tezgah Grafigini Goster</span>
+        </label>
+        <label class="settings-item settings-item-inline">
+          <input id="setting-active-only" type="checkbox" />
+          <span>Sadece Calisan Tezgahlar</span>
+        </label>
+        <label class="settings-item">
+          <span>Kart Siralama</span>
+          <select id="setting-sort">
+            <option value="tezgah_asc">Tezgah No (Artan)</option>
+            <option value="tezgah_desc">Tezgah No (Azalan)</option>
+            <option value="randiman_desc">Randiman (Yuksek -> Dusuk)</option>
+            <option value="randiman_asc">Randiman (Dusuk -> Yuksek)</option>
+          </select>
+        </label>
+        <label class="settings-item">
+          <span>Kart Sutun Sayisi</span>
+          <select id="setting-columns">
+            <option value="auto">Otomatik</option>
+            <option value="1">1 Sutun</option>
+            <option value="2">2 Sutun</option>
+            <option value="3">3 Sutun</option>
+          </select>
+        </label>
+        <label class="settings-item settings-item-inline">
+          <input id="setting-large-text" type="checkbox" />
+          <span>Buyuk Yazi Modu</span>
+        </label>
+        <label class="settings-item settings-item-inline">
+          <input id="setting-details-open" type="checkbox" />
+          <span>Detaylari Acik Tut</span>
+        </label>
+      </div>
+    </aside>
 
     <script src="app.js"></script>
   </body>
